@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import BaseRoom from './BaseRoom';
 import { useDaily } from '../../hooks/useDaily';
 import VideoBubbles from './VideoBubbles';
+import Chat from './Chat';
 
 const Container = styled.div`
   width: 100%;
@@ -123,6 +124,9 @@ const CheckinRoom: React.FC<CheckinRoomProps> = ({ onSwitchRoom, userName = 'Gue
     toggleAudio,
     isVideoOn,
     isAudioOn,
+    messages,
+    sendMessage,
+    kickParticipant,
   } = useDaily();
 
   const [showVideoTooltip, setShowVideoTooltip] = React.useState(false);
@@ -130,7 +134,7 @@ const CheckinRoom: React.FC<CheckinRoomProps> = ({ onSwitchRoom, userName = 'Gue
 
   useEffect(() => {
     const roomUrl = process.env.REACT_APP_DAILY_ROOM_URL || 'https://your-domain.daily.co/presently-room';
-    joinCall(roomUrl);
+    joinCall(roomUrl, userName);
 
     return () => {
       leaveCall();
@@ -199,6 +203,7 @@ const CheckinRoom: React.FC<CheckinRoomProps> = ({ onSwitchRoom, userName = 'Gue
       <VideoBubbles 
         participants={[...participants, localParticipant].filter(Boolean)} 
         userName={userName}
+        onKickParticipant={kickParticipant}
       />
       
       <BaseRoom 
@@ -258,6 +263,13 @@ const CheckinRoom: React.FC<CheckinRoomProps> = ({ onSwitchRoom, userName = 'Gue
           </StatusMessage>
         </Container>
       </BaseRoom>
+      
+      <Chat 
+        messages={messages}
+        sendMessage={sendMessage}
+        participants={participants}
+        localParticipant={localParticipant}
+      />
     </>
   );
 };

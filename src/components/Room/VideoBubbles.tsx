@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -26,6 +26,10 @@ const VideoBubble = styled(motion.div)<{ $isLocal?: boolean }>`
   border: 3px solid ${props => props.$isLocal ? '#667eea' : '#e2e8f0'};
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  
+  &:hover .report-button {
+    opacity: 1;
+  }
 `;
 
 const VideoElement = styled.video`
@@ -80,9 +84,98 @@ const StatusIndicator = styled.div<{ $status: 'audio' | 'video' | 'both' | 'none
   font-size: 0.7rem;
 `;
 
+const ReportButton = styled(motion.button)`
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #e53e3e;
+  color: white;
+  border: 2px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+  
+  &:hover {
+    background: #c53030;
+    transform: scale(1.1);
+  }
+`;
+
+const ReportModal = styled(motion.div)`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+`;
+
+const ModalContent = styled.div`
+  background: white;
+  border-radius: 15px;
+  padding: 2rem;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+`;
+
+const ModalTitle = styled.h3`
+  color: #e53e3e;
+  margin-bottom: 1rem;
+`;
+
+const ModalText = styled.p`
+  color: #4a5568;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+`;
+
+const ModalButtons = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+`;
+
+const ModalButton = styled.button<{ $variant?: 'danger' | 'cancel' }>`
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  ${props => props.$variant === 'danger' ? `
+    background: #e53e3e;
+    color: white;
+    &:hover {
+      background: #c53030;
+    }
+  ` : `
+    background: #f7fafc;
+    color: #4a5568;
+    border: 1px solid #e2e8f0;
+    &:hover {
+      background: #edf2f7;
+    }
+  `}
+`;
+
 interface VideoBubblesProps {
   participants: any[];
   userName?: string;
+  onKickParticipant?: (participantId: string) => void;
 }
 
 const getAvatarColor = (name: string): string => {
@@ -111,10 +204,27 @@ const getInitials = (name: string): string => {
   return name.substring(0, 2).toUpperCase();
 };
 
-const VideoBubbles: React.FC<VideoBubblesProps> = ({ participants, userName }) => {
+const VideoBubbles: React.FC<VideoBubblesProps> = ({ participants, userName, onKickParticipant }) => {
+  const [reportingParticipant, setReportingParticipant] = useState<any>(null);
+  
   if (!participants || participants.length === 0) return null;
 
   const validParticipants = participants.filter(p => p !== null);
+
+  const handleReport = (participant: any) => {
+    setReportingParticipant(participant);
+  };
+
+  const confirmKick = () => {
+    if (reportingParticipant && onKickParticipant) {
+      onKickParticipant(reportingParticipant.user_id);
+    }
+    setReportingParticipant(null);
+  };
+
+  const cancelReport = () => {
+    setReportingParticipant(null);
+  };
 
   return (
     <BubblesContainer>
@@ -135,7 +245,10 @@ const VideoBubbles: React.FC<VideoBubblesProps> = ({ participants, userName }) =
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0, opacity: 0 }}
-              whileHover={{ scale: 1.1, y: -5 }}
+              whileHover={{ 
+                scale: 1.1, 
+                y: -5
+              }}
               transition={{ type: "spring", stiffness: 300 }}
             >
               {participant.video ? (
@@ -163,6 +276,18 @@ const VideoBubbles: React.FC<VideoBubblesProps> = ({ participants, userName }) =
                 {status === 'none' && '🔇'}
               </StatusIndicator>
               
+              {/* Report button - only show for other participants with video/audio */}
+              {!participant.local && (participant.video || participant.audio) && (
+                <ReportButton
+                  className="report-button"
+                  onClick={() => handleReport(participant)}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  !
+                </ReportButton>
+              )}
+              
               <NameTag>
                 {displayName}
                 {participant.local && ' (you)'}
@@ -170,6 +295,34 @@ const VideoBubbles: React.FC<VideoBubblesProps> = ({ participants, userName }) =
             </VideoBubble>
           );
         })}
+      </AnimatePresence>
+      
+      {/* Report Modal */}
+      <AnimatePresence>
+        {reportingParticipant && (
+          <ReportModal
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <ModalContent>
+              <ModalTitle>⚠️ Report Participant</ModalTitle>
+              <ModalText>
+                Are you sure you want to report and remove <strong>{reportingParticipant.user_name || 'this participant'}</strong> from the room?
+                <br /><br />
+                This action should only be used for inappropriate behavior such as nudity, harassment, or other violations of community guidelines.
+              </ModalText>
+              <ModalButtons>
+                <ModalButton onClick={cancelReport}>
+                  Cancel
+                </ModalButton>
+                <ModalButton $variant="danger" onClick={confirmKick}>
+                  Report & Remove
+                </ModalButton>
+              </ModalButtons>
+            </ModalContent>
+          </ReportModal>
+        )}
       </AnimatePresence>
     </BubblesContainer>
   );

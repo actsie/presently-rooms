@@ -16,12 +16,15 @@ interface UseDailyReturn {
   localParticipant: DailyParticipant | null;
   isLoading: boolean;
   error: string | null;
-  joinCall: (url: string) => Promise<void>;
+  joinCall: (url: string, userName?: string) => Promise<void>;
   leaveCall: () => void;
   toggleVideo: () => void;
   toggleAudio: () => void;
   isVideoOn: boolean;
   isAudioOn: boolean;
+  messages: any[];
+  sendMessage: (text: string) => void;
+  kickParticipant: (participantId: string) => void;
 }
 
 export const useDaily = (): UseDailyReturn => {
@@ -33,6 +36,7 @@ export const useDaily = (): UseDailyReturn => {
   const [error, setError] = useState<string | null>(null);
   const [isVideoOn, setIsVideoOn] = useState(false);
   const [isAudioOn, setIsAudioOn] = useState(false);
+  const [messages, setMessages] = useState<any[]>([]);
 
   const handleParticipantUpdate = useCallback((event: any) => {
     console.log('handleParticipantUpdate called with event:', event);
@@ -66,7 +70,7 @@ export const useDaily = (): UseDailyReturn => {
     }
   }, [callObject]);
 
-  const joinCall = useCallback(async (url: string) => {
+  const joinCall = useCallback(async (url: string, userName?: string) => {
     if (isJoiningRef.current) {
       console.log('Join in progress, skipping join');
       return;
@@ -91,7 +95,7 @@ export const useDaily = (): UseDailyReturn => {
 
       await newCallObject.join({ 
         url,
-        userName: 'Guest',
+        userName: userName || 'Guest',
         startVideoOff: true,
         startAudioOff: true
       });
@@ -126,6 +130,17 @@ export const useDaily = (): UseDailyReturn => {
       newCallObject.on('participant-joined', updateHandler);
       newCallObject.on('participant-left', updateHandler);
       newCallObject.on('participant-updated', updateHandler);
+      
+      // Chat message handling
+      newCallObject.on('app-message', (event: any) => {
+        console.log('Received message:', event);
+        setMessages(prev => [...prev, {
+          id: Date.now(),
+          text: event.data?.text || '',
+          fromId: event.fromId,
+          timestamp: new Date()
+        }]);
+      });
 
       updateHandler(null);
     } catch (err) {
@@ -163,6 +178,39 @@ export const useDaily = (): UseDailyReturn => {
     }
   }, [callObject, isAudioOn]);
 
+  const sendMessage = useCallback((text: string) => {
+    if (callObject && text.trim()) {
+      // Add your own message to the messages array immediately
+      const ownMessage = {
+        id: Date.now(),
+        text: text.trim(),
+        fromId: localParticipant?.user_id || 'self',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, ownMessage]);
+      
+      // Send to others
+      callObject.sendAppMessage({ text: text.trim() }, '*');
+    }
+  }, [callObject, localParticipant]);
+
+  const kickParticipant = useCallback((participantId: string) => {
+    if (callObject) {
+      // Note: Daily.co doesn't support kicking by default in free plans
+      // This would require a Daily.co API call from your backend
+      console.log('Participant reported:', participantId);
+      
+      // For now, just remove them from local state and send a message
+      setParticipants(prev => prev.filter(p => p.user_id !== participantId));
+      
+      // You could send a message to inform others
+      callObject.sendAppMessage({ 
+        type: 'participant_reported',
+        reportedId: participantId 
+      }, '*');
+    }
+  }, [callObject]);
+
   useEffect(() => {
     return () => {
       if (callObject) {
@@ -184,5 +232,8 @@ export const useDaily = (): UseDailyReturn => {
     toggleAudio,
     isVideoOn,
     isAudioOn,
+    messages,
+    sendMessage,
+    kickParticipant,
   };
 };
