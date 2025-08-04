@@ -21,7 +21,10 @@ const RoomContainer: React.FC = () => {
 
   switch (currentRoomType) {
     case 'silent':
-      return <SilentRoom onSwitchRoom={handleSwitchRoom} />;
+      return <SilentRoom 
+        onSwitchRoom={handleSwitchRoom} 
+        userName={preferences.displayName}
+      />;
     case 'lofi':
       return <LofiRoom onSwitchRoom={handleSwitchRoom} />;
     case 'checkin':
@@ -30,7 +33,10 @@ const RoomContainer: React.FC = () => {
         userName={preferences.displayName}
       />;
     default:
-      return <SilentRoom onSwitchRoom={handleSwitchRoom} />;
+      return <SilentRoom 
+        onSwitchRoom={handleSwitchRoom} 
+        userName={preferences.displayName}
+      />;
   }
 };
 
