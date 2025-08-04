@@ -1,46 +1,83 @@
-# Getting Started with Create React App
+# Presently - A Gentle Virtual Coworking Space
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Presently is a calming virtual coworking space designed for users who may feel overwhelmed. It offers three types of rooms - Silent, Lo-fi, and Check-in - each tailored to different energy levels and support needs.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- **3-Question Onboarding**: Quick, gentle questions to match users with the right room
+- **Silent Rooms**: Focused work with breathing guides and timers
+- **Lo-fi Rooms**: Ambient music to keep you company
+- **Check-in Rooms**: Optional voice/video with bubble-style UI
+- **Gentle UX**: No pressure to turn on camera/mic, easy room switching
+- **Reassuring Microcopy**: Supportive messages throughout the experience
 
-### `npm start`
+## Setup
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+1. Install dependencies:
+```bash
+npm install
+```
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+2. Set up Daily.co (for video/voice features):
+   - Sign up at [Daily.co](https://daily.co)
+   - Create a room or get your domain
+   - Copy `.env.example` to `.env`
+   - Add your Daily room URL to `.env`
 
-### `npm test`
+3. Start the development server:
+```bash
+npm start
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Technology Stack
 
-### `npm run build`
+- React with TypeScript
+- Styled Components for styling
+- Framer Motion for animations
+- Daily.co for video/voice
+- React Router for navigation
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Room Types
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Silent Room 🤫
+- Timer for focused work sessions
+- Optional breathing guide
+- No audio/video features
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Lo-fi Room 🎵
+- Gentle background music player
+- Volume controls
+- Community presence indicators
 
-### `npm run eject`
+### Check-in Room 💬
+- Optional voice and video
+- Bubble-style video display
+- Gentle check-in prompts
+- Easy mic/camera toggles
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+## Design Philosophy
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Presently is built with emotional safety in mind:
+- Never forces users to turn on camera or mic
+- Provides reassuring messages throughout
+- Makes it easy to switch to a quieter room
+- Uses calming colors and gentle animations
+- Respects user preferences and energy levels
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+## Development
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+```bash
+# Run in development mode
+npm start
 
-## Learn More
+# Build for production
+npm run build
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+# Run tests
+npm test
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Environment Variables
+
+- `REACT_APP_DAILY_ROOM_URL`: Your Daily.co room URL for video/voice features
+- `REACT_APP_DAILY_API_KEY`: (Optional) Daily API key for dynamic room creation
