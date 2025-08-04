@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
+import { createSparkles, playChime } from '../../utils/party';
 
 const SessionContainer = styled.div`
   width: 100%;
@@ -111,6 +112,24 @@ const TimerDisplay = styled(motion.div)`
   font-variant-numeric: tabular-nums;
 `;
 
+const SparkleText = styled(motion.div)`
+  font-size: 5rem;
+  font-weight: 300;
+  color: #48bb78;
+  margin: 3rem 0;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.2s ease;
+  
+  &:hover {
+    transform: scale(1.05);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+`;
+
 const TimerControls = styled.div`
   display: flex;
   justify-content: center;
@@ -192,6 +211,7 @@ const FocusSession: React.FC<FocusSessionProps> = ({ onSessionComplete, onSessio
   const [pausesUsed, setPausesUsed] = useState(0);
   const [pauseStartTime, setPauseStartTime] = useState<number | null>(null);
   const [breakTimeRemaining, setBreakTimeRemaining] = useState(0);
+  const sparkleTextRef = useRef<HTMLDivElement>(null);
 
   const formatTime = useCallback((seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -251,6 +271,24 @@ const FocusSession: React.FC<FocusSessionProps> = ({ onSessionComplete, onSessio
     setSelectedDuration(25);
     setCustomDuration('');
   };
+
+  const handleSparkleClick = () => {
+    if (sparkleTextRef.current) {
+      createSparkles(sparkleTextRef.current, { count: 30 });
+      playChime();
+    }
+  };
+
+  // Auto-trigger sparkles when session completes
+  useEffect(() => {
+    if (state === 'completed' && sparkleTextRef.current) {
+      const timer = setTimeout(() => {
+        createSparkles(sparkleTextRef.current!, { count: 25 });
+        playChime();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [state]);
 
   // Main session timer
   useEffect(() => {
@@ -412,9 +450,14 @@ const FocusSession: React.FC<FocusSessionProps> = ({ onSessionComplete, onSessio
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <TimerDisplay style={{ color: '#48bb78' }}>
+            <SparkleText 
+              ref={sparkleTextRef}
+              onClick={handleSparkleClick}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
               Session Complete!
-            </TimerDisplay>
+            </SparkleText>
             
             <SessionStatus>
               Great work! You focused for {Math.round(actualTimeSpent / 60)} minutes.
